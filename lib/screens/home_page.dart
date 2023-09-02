@@ -39,25 +39,24 @@ class _HomePageState extends State<HomePage> {
 
           return GestureDetector(
             onDoubleTap: () {
-              _openEditPopup(context, transaction,index);
+              _openEditPopup(context, transaction, index);
             },
             child: Dismissible(
-              
-              key:ValueKey(transaction['id']),
-                   background: Container(color: Colors.red),
-                  // Provide a unique key for each Dismissible
+              key: ValueKey(transaction['id']),
+              background: Container(color: Colors.red),
+              // Provide a unique key for each Dismissible
               onDismissed: (direction) async {
                 // Delete the transaction from the database
-               await HiveDb.deleteData(transaction['id'], key: transaction['id']);
-               print(transaction);
-
-               
+                await HiveDb.deleteData(transaction['id'],
+                    key: transaction['id']);
+                print(transaction);
               },
               child: Container(
                 width: double.infinity,
-                
-                child: Card(  
-                  color: transaction["isDebit"] ? Color.fromARGB(255, 224, 140, 131):Color.fromARGB(255, 98, 184, 102),
+                child: Card(
+                  color: transaction["isDebit"]
+                      ? Color.fromARGB(255, 224, 140, 131)
+                      : Color.fromARGB(255, 98, 184, 102),
                   elevation: 4,
                   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Padding(
@@ -99,12 +98,12 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         transactionDetailsList =
             List<Map<dynamic, dynamic>>.from(allData.values);
-            print(transactionDetailsList);
+        print(transactionDetailsList);
       });
     }
   }
 
-    void _openPopup(BuildContext context) async {
+  void _openPopup(BuildContext context) async {
     final result = await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -126,35 +125,59 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       transactionDetailsList.add(newTransaction);
       print(transactionDetailsList);
+      transactionDetailsList.sort((a, b) {
+        String dateA = a['selectedDate'];
+        String dateB = b['selectedDate'];
+        return dateB.compareTo(dateA); // Note the change here
+      });
+      transactionDetailsList.sort((a, b) {
+        String timeA = a['compareTime'];
+        String timeB = b['compareTime'];
+        return timeB.compareTo(timeA); // Reverse the order of comparison
+      });
     });
   }
-  
-     void _updateEditedTransactionList(Map<String, dynamic> editedTransaction, int index) {
+
+  void _updateEditedTransactionList(
+      Map<String, dynamic> editedTransaction, int index) {
     setState(() {
       transactionDetailsList[index] = editedTransaction;
       print(transactionDetailsList);
+      transactionDetailsList.sort((a, b) {
+        String dateA = a['selectedDate'];
+        String dateB = b['selectedDate'];
+        return dateB.compareTo(dateA); // Note the change here
+      });
+      transactionDetailsList.sort((a, b) {
+        String timeA = a['compareTime'];
+        String timeB = b['compareTime'];
+        return timeB.compareTo(timeA); // Reverse the order of comparison
+      });
     });
   }
 
+  _openEditPopup(BuildContext context, Map<dynamic, dynamic> transaction,
+      int index) async {
+    final editedTransaction = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Transaction'),
+          content: EditTransactionForm(
+              initialTransaction: transaction,
+              onTransactionEdited: (editedTransaction) {
+                _updateEditedTransactionList(editedTransaction, index);
+              }),
+        );
+      },
+    );
 
- _openEditPopup(BuildContext context, Map<dynamic, dynamic> transaction, int index) async {
-  final editedTransaction = await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Edit Transaction'),
-        content: EditTransactionForm(initialTransaction: transaction, onTransactionEdited: (editedTransaction) {
-          _updateEditedTransactionList(editedTransaction, index);
-        }),
-      );
-    },
-  );
-
-  if (editedTransaction != null && editedTransaction is Map<String, dynamic>) {
-    // Handle the edited transaction data
-    print('Transaction edited: $editedTransaction');
-    // Update the transaction details in your list or database
-    // You might need to implement this logic based on your data structure
+    if (editedTransaction != null &&
+        editedTransaction is Map<String, dynamic>) {
+      // Handle the edited transaction data
+      print('Transaction edited: $editedTransaction');
+      // Update the transaction details in your list or database
+      // You might need to implement this logic based on your data structure
+    }
   }
-}
 }

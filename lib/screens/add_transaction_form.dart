@@ -29,6 +29,10 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
 
   String transactionDetailsId = " ";
 
+  String compareTime="";
+  // Define a variable to store the seconds
+int selectedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +40,13 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
     // Initialize the controller with the current date
     selectDateController.text = _formatDate(DateTime.now());
     selectTimeController.text = _formatTime(TimeOfDay.now());
+    
+    // Get the current seconds and set compareTime
+  DateTime now = DateTime.now();
+  int currentSeconds = now.second;
+  compareTime = _compareFormatTime(TimeOfDay.now(), currentSeconds);
+  print('88888888888888${compareTime}');
+    
   }
 
   @override
@@ -131,7 +142,7 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
         'isDebit': isDebit,
         'amount': amountController.text.toString(),
         'description': descriptionController.text,
-        'noteTime': '$selectDateController' '$selectTimeController',
+        'compareTime': compareTime.toString(),
       };
 
       await HiveDb.addData(key: transactionDetailsId, value: enterTransactionDetails);
@@ -145,8 +156,8 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
   }
 
   String _formatDate(DateTime date) {
-    return DateFormat('dd/MM/yyyy').format(date); // Format date as "dd/MM/yyyy"
-  }
+  return DateFormat('dd-MM-yyyy').format(date);
+}
 
   String _formatTime(TimeOfDay time) {
     final formattedTime = DateFormat('h:mm a').format(
@@ -155,48 +166,58 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
     return formattedTime;
   }
 
-  // Function for adding a date using a date picker
-  addDate() async {
-    DateTime? date = await showDatePicker(
-      context: context,
-      firstDate: DateTime.now()
-          .subtract(Duration(days: 365 * 2)), // 2 years before today
-      lastDate: DateTime.now().add(Duration(days: 365 * 2)),
+String _compareFormatTime(TimeOfDay time, int seconds) {
+  return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+}
 
-      initialDate: DateTime.now(),
-    );
+ 
 
-    if (date != null) {
-      String selectedDate = '${date.day}/${date.month}/${date.year}';
-      setState(() {
-        selectDateController.text = selectedDate;
-      });
-    } else {
-      // Handle the situation where the user didn't select a date
-      // For example, you can display a message or take other actions
-      print('No date selected');
-    }
+
+// Function for adding a date using a date picker
+addDate() async {
+  DateTime? date = await showDatePicker(
+    context: context,
+    firstDate: DateTime.now().subtract(Duration(days: 365 * 2)), // 2 years before today
+    lastDate: DateTime.now().add(Duration(days: 365 * 2)),
+    initialDate: DateTime.now(),
+  );
+
+  if (date != null) {
+    String formattedDate = DateFormat('dd-MM-yyyy').format(date); // Format the date
+    setState(() {
+      selectDateController.text = formattedDate;
+    });
+  } else {
+    // Handle the situation where the user didn't select a date
+    // For example, you can display a message or take other actions
+    print('No date selected');
   }
+}
+// Function for adding a time using a time picker
+addTime() async {
+  TimeOfDay? time = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay.now(),
+  );
 
-  // Function for adding a time using a time picker
-  addTime() async {
-    TimeOfDay? time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      //fieldHintText: "Select Time",
-    );
+  if (time != null) {
+    // Get the current seconds
+    DateTime now = DateTime.now();
+    selectedSeconds = now.second;
 
-    if (time != null) {
-      String selectedTime = _formatTime(time);
-      setState(() {
-        selectTimeController.text = selectedTime;
-      });
-    } else {
-      // Handle the situation where the user didn't select a time
-      // For example, you can display a message or take other actions
-      print('No time selected');
-    }
+    String selectedTime = _formatTime(time);
+    String selectedCompareTime = _compareFormatTime(time, selectedSeconds);
+
+    setState(() {
+      selectTimeController.text = selectedTime;
+      compareTime = selectedCompareTime;
+    });
+  } else {
+    // Handle the situation where the user didn't select a time
+    // For example, you can display a message or take other actions
+    print('No time selected');
   }
+}
 
   // Function to set the transaction mode
   setTransactionMode(bool isDebitMode) {
